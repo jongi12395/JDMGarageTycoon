@@ -10,20 +10,33 @@ public class GameManager : MonoBehaviour
     public int moneyPerSecond = 5;
     public int clickValue = 10;
 
-    [Header("Upgrade System")]
-    public int upgradeCost = 50;
-    public int upgradeIncrease = 5;
+    [Header("Engine Upgrade")]
+    public int engineLevel = 1;
+    public int engineCost = 50;
+    public int engineIncrease = 5;
+
+    [Header("Click Upgrade")]
+    public int clickLevel = 1;
+    public int clickCost = 30;
+    public int clickIncrease = 5;
 
     [Header("UI")]
     public TextMeshProUGUI moneyText;
-    public TextMeshProUGUI upgradeText;
-    public Button upgradeButton;
+    public TextMeshProUGUI engineText;
+    public TextMeshProUGUI clickText;
+    public Button engineButton;
+    public Button clickButton;
+
+    [Header("Car")]
+    public Transform car;
 
     [Header("Floating Text")]
     public GameObject floatingTextPrefab;
 
-    [Header("Car")]
-    public Transform car;
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip clickSound;
+    public AudioClip upgradeSound;
 
     void Start()
     {
@@ -44,30 +57,60 @@ public class GameManager : MonoBehaviour
     public void OnCarClicked()
     {
         money += clickValue;
-        StartCoroutine(AnimateCar());
+
+        PlaySound(clickSound);
         SpawnFloatingText();
+        StartCoroutine(AnimateCar());
+
         UpdateUI();
     }
 
     public void BuyEngine()
     {
-        if (money >= upgradeCost)
+        if (money >= engineCost)
         {
-            money -= upgradeCost;
-            moneyPerSecond += upgradeIncrease;
-            upgradeCost = Mathf.RoundToInt(upgradeCost * 1.5f);
+            money -= engineCost;
+            engineLevel++;
+            moneyPerSecond += engineIncrease;
+            engineCost += 25;
 
+            PlaySound(upgradeSound);
             StartCoroutine(AnimateCar());
+            UpdateUI();
+        }
+    }
+
+    public void BuyClick()
+    {
+        if (money >= clickCost)
+        {
+            money -= clickCost;
+            clickLevel++;
+            clickValue += clickIncrease;
+            clickCost += 15;
+
+            PlaySound(upgradeSound);
             UpdateUI();
         }
     }
 
     void UpdateUI()
     {
-        moneyText.text = "Money: $" + money;
-        upgradeText.text = "Upgrade Engine\n($" + upgradeCost + ")";
+        moneyText.text = "Money: $" + money + "\nIncome: $" + moneyPerSecond + "/sec";
 
-        upgradeButton.interactable = money >= upgradeCost;
+        engineText.text = "Engine Lv. " + engineLevel + "\nCost: $" + engineCost;
+        clickText.text = "Click Lv. " + clickLevel + "\nCost: $" + clickCost;
+
+        engineButton.interactable = money >= engineCost;
+        clickButton.interactable = money >= clickCost;
+    }
+
+    void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
     }
 
     void SpawnFloatingText()
@@ -79,8 +122,6 @@ public class GameManager : MonoBehaviour
         tmp.text = "+$" + clickValue;
 
         RectTransform rt = text.GetComponent<RectTransform>();
-
-        // Convert world position → screen position
         Vector3 screenPos = Camera.main.WorldToScreenPoint(car.position);
         rt.position = screenPos;
 
@@ -102,10 +143,8 @@ public class GameManager : MonoBehaviour
         {
             time += Time.deltaTime;
 
-            // Move upward
             rt.anchoredPosition = startPos + Vector3.up * (time * 80f);
 
-            // Fade out
             float alpha = Mathf.Lerp(1f, 0f, time / duration);
             tmp.color = new Color(startColor.r, startColor.g, startColor.b, alpha);
 
@@ -120,9 +159,26 @@ public class GameManager : MonoBehaviour
         if (car == null) yield break;
 
         Vector3 originalScale = car.localScale;
-        car.localScale = originalScale * 1.2f;
+        Vector3 popScale = originalScale * 1.15f;
 
-        yield return new WaitForSeconds(0.1f);
+        float duration = 0.08f;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            car.localScale = Vector3.Lerp(originalScale, popScale, time / duration);
+            yield return null;
+        }
+
+        time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            car.localScale = Vector3.Lerp(popScale, originalScale, time / duration);
+            yield return null;
+        }
 
         car.localScale = originalScale;
     }
