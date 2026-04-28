@@ -1,40 +1,39 @@
+using System.Collections;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    public float money = 0f;
-    public float moneyPerSecond = 5f;
-    public float clickValue = 10f;
+    [Header("Money System")]
+    public int money = 0;
+    public int moneyPerSecond = 5;
 
-    public float upgradeCost = 50f;
-    public float upgradeIncrease = 5f;
+    [Header("Upgrade System")]
+    public int upgradeCost = 50;
+    public int upgradeIncrease = 5;
 
+    [Header("UI")]
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI upgradeText;
     public Button upgradeButton;
 
-    void Update()
+    [Header("Car")]
+    public Transform car;
+
+    void Start()
     {
-        money += moneyPerSecond * Time.deltaTime;
+        UpdateUI();
+        StartCoroutine(AddMoneyOverTime());
+    }
 
-        moneyText.text = "Money: $" + Mathf.FloorToInt(money);
-        upgradeText.text = "Upgrade Engine ($" + Mathf.FloorToInt(upgradeCost) + ")";
-
-        upgradeButton.interactable = money >= upgradeCost;
-
-        if (Input.GetMouseButtonDown(0))
+    IEnumerator AddMoneyOverTime()
+    {
+        while (true)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-            if (Physics.Raycast(ray, out RaycastHit hit))
-            {
-                if (hit.transform.name == "Cube")
-                {
-                    money += clickValue;
-                }
-            }
+            yield return new WaitForSeconds(1f);
+            money += moneyPerSecond;
+            UpdateUI();
         }
     }
 
@@ -44,9 +43,39 @@ public class GameManager : MonoBehaviour
         {
             money -= upgradeCost;
             moneyPerSecond += upgradeIncrease;
+            upgradeCost = Mathf.RoundToInt(upgradeCost * 1.5f);
 
-            upgradeCost *= 1.5f;
-            upgradeCost = Mathf.Round(upgradeCost);
+            StartCoroutine(AnimateCar());
+            UpdateUI();
         }
+    }
+
+    void UpdateUI()
+    {
+        // Update text
+        moneyText.text = "Money: $" + money;
+        upgradeText.text = "Upgrade Engine\n($" + upgradeCost + ")";
+
+        // 🔥 Enable/Disable button
+        if (money >= upgradeCost)
+        {
+            upgradeButton.interactable = true;
+        }
+        else
+        {
+            upgradeButton.interactable = false;
+        }
+    }
+
+    IEnumerator AnimateCar()
+    {
+        if (car == null) yield break;
+
+        Vector3 originalScale = car.localScale;
+        car.localScale = originalScale * 1.2f;
+
+        yield return new WaitForSeconds(0.1f);
+
+        car.localScale = originalScale;
     }
 }

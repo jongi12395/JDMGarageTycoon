@@ -221,12 +221,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   money: 0
   moneyPerSecond: 5
-  clickValue: 10
   upgradeCost: 50
   upgradeIncrease: 5
   moneyText: {fileID: 1921992416}
   upgradeText: {fileID: 1890968011}
   upgradeButton: {fileID: 1890968010}
+  car: {fileID: 1316103326}
 --- !u!4 &131757703
 Transform:
   m_ObjectHideFlags: 0
