@@ -19,6 +19,9 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI upgradeText;
     public Button upgradeButton;
 
+    [Header("Floating Text")]
+    public GameObject floatingTextPrefab;
+
     [Header("Car")]
     public Transform car;
 
@@ -38,11 +41,11 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 🔥 CLICK THE CAR
     public void OnCarClicked()
     {
         money += clickValue;
         StartCoroutine(AnimateCar());
+        SpawnFloatingText();
         UpdateUI();
     }
 
@@ -64,7 +67,52 @@ public class GameManager : MonoBehaviour
         moneyText.text = "Money: $" + money;
         upgradeText.text = "Upgrade Engine\n($" + upgradeCost + ")";
 
-        upgradeButton.interactable = (money >= upgradeCost);
+        upgradeButton.interactable = money >= upgradeCost;
+    }
+
+    void SpawnFloatingText()
+    {
+        GameObject text = Instantiate(floatingTextPrefab, moneyText.transform.parent);
+        text.SetActive(true);
+
+        TextMeshProUGUI tmp = text.GetComponent<TextMeshProUGUI>();
+        tmp.text = "+$" + clickValue;
+
+        RectTransform rt = text.GetComponent<RectTransform>();
+
+        // Convert world position → screen position
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(car.position);
+        rt.position = screenPos;
+
+        StartCoroutine(AnimateFloatingText(text));
+    }
+
+    IEnumerator AnimateFloatingText(GameObject text)
+    {
+        RectTransform rt = text.GetComponent<RectTransform>();
+        TextMeshProUGUI tmp = text.GetComponent<TextMeshProUGUI>();
+
+        Vector3 startPos = rt.anchoredPosition;
+        Color startColor = tmp.color;
+
+        float duration = 1f;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+
+            // Move upward
+            rt.anchoredPosition = startPos + Vector3.up * (time * 80f);
+
+            // Fade out
+            float alpha = Mathf.Lerp(1f, 0f, time / duration);
+            tmp.color = new Color(startColor.r, startColor.g, startColor.b, alpha);
+
+            yield return null;
+        }
+
+        Destroy(text);
     }
 
     IEnumerator AnimateCar()

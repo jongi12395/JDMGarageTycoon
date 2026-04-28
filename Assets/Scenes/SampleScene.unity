@@ -227,6 +227,7 @@ MonoBehaviour:
   moneyText: {fileID: 1921992416}
   upgradeText: {fileID: 1890968011}
   upgradeButton: {fileID: 1890968010}
+  floatingTextPrefab: {fileID: 5380014917231250426, guid: 20ec9c8218f1a494192618149ec0e0bf, type: 3}
   car: {fileID: 1316103326}
 --- !u!4 &131757703
 Transform:
