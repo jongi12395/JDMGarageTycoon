@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     [Header("Money System")]
     public int money = 0;
     public int moneyPerSecond = 5;
+    public int clickValue = 10;
 
     [Header("Upgrade System")]
     public int upgradeCost = 50;
@@ -37,6 +38,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // 🔥 CLICK THE CAR
+    public void OnCarClicked()
+    {
+        money += clickValue;
+        StartCoroutine(AnimateCar());
+        UpdateUI();
+    }
+
     public void BuyEngine()
     {
         if (money >= upgradeCost)
@@ -52,19 +61,10 @@ public class GameManager : MonoBehaviour
 
     void UpdateUI()
     {
-        // Update text
         moneyText.text = "Money: $" + money;
         upgradeText.text = "Upgrade Engine\n($" + upgradeCost + ")";
 
-        // 🔥 Enable/Disable button
-        if (money >= upgradeCost)
-        {
-            upgradeButton.interactable = true;
-        }
-        else
-        {
-            upgradeButton.interactable = false;
-        }
+        upgradeButton.interactable = (money >= upgradeCost);
     }
 
     IEnumerator AnimateCar()
