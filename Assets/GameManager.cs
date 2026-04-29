@@ -30,6 +30,8 @@ public class GameManager : MonoBehaviour
     [Header("Car")]
     public Transform car;
 
+    private Vector3 originalCarScale;
+
     [Header("Floating Text")]
     public GameObject floatingTextPrefab;
 
@@ -38,8 +40,13 @@ public class GameManager : MonoBehaviour
     public AudioClip clickSound;
     public AudioClip upgradeSound;
 
+    private Coroutine carAnimation;
+
     void Start()
     {
+        // ✅ Save REAL scale at start
+        originalCarScale = car.localScale;
+
         UpdateUI();
         StartCoroutine(AddMoneyOverTime());
     }
@@ -60,7 +67,7 @@ public class GameManager : MonoBehaviour
 
         PlaySound(clickSound);
         SpawnFloatingText();
-        StartCoroutine(AnimateCar());
+        PlayCarAnimation();
 
         UpdateUI();
     }
@@ -75,7 +82,8 @@ public class GameManager : MonoBehaviour
             engineCost += 25;
 
             PlaySound(upgradeSound);
-            StartCoroutine(AnimateCar());
+            PlayCarAnimation();
+
             UpdateUI();
         }
     }
@@ -111,6 +119,21 @@ public class GameManager : MonoBehaviour
         {
             audioSource.PlayOneShot(clip);
         }
+    }
+
+    void PlayCarAnimation()
+    {
+        if (car == null) return;
+
+        if (carAnimation != null)
+        {
+            StopCoroutine(carAnimation);
+        }
+
+        // ✅ Reset to REAL original scale
+        car.localScale = originalCarScale;
+
+        carAnimation = StartCoroutine(AnimateCar());
     }
 
     void SpawnFloatingText()
@@ -156,30 +179,40 @@ public class GameManager : MonoBehaviour
 
     IEnumerator AnimateCar()
     {
-        if (car == null) yield break;
+        Vector3 smallerScale = originalCarScale * 0.9f;
+        Vector3 popScale = originalCarScale * 1.15f;
 
-        Vector3 originalScale = car.localScale;
-        Vector3 popScale = originalScale * 1.15f;
-
-        float duration = 0.08f;
+        float duration = 0.05f;
         float time = 0f;
 
+        // Shrink
         while (time < duration)
         {
             time += Time.deltaTime;
-            car.localScale = Vector3.Lerp(originalScale, popScale, time / duration);
+            car.localScale = Vector3.Lerp(originalCarScale, smallerScale, time / duration);
             yield return null;
         }
 
         time = 0f;
 
+        // Pop
         while (time < duration)
         {
             time += Time.deltaTime;
-            car.localScale = Vector3.Lerp(popScale, originalScale, time / duration);
+            car.localScale = Vector3.Lerp(smallerScale, popScale, time / duration);
             yield return null;
         }
 
-        car.localScale = originalScale;
+        time = 0f;
+
+        // Return
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            car.localScale = Vector3.Lerp(popScale, originalCarScale, time / duration);
+            yield return null;
+        }
+
+        car.localScale = originalCarScale;
     }
 }
