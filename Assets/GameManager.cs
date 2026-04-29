@@ -14,11 +14,13 @@ public class GameManager : MonoBehaviour
     public int engineLevel = 1;
     public int engineCost = 50;
     public int engineIncrease = 5;
+    public float engineCostMultiplier = 1.35f;
 
     [Header("Click Upgrade")]
     public int clickLevel = 1;
     public int clickCost = 30;
     public int clickIncrease = 5;
+    public float clickCostMultiplier = 1.35f;
 
     [Header("UI")]
     public TextMeshProUGUI moneyText;
@@ -29,7 +31,6 @@ public class GameManager : MonoBehaviour
 
     [Header("Car")]
     public Transform car;
-
     private Vector3 originalCarScale;
 
     [Header("Floating Text")]
@@ -44,7 +45,6 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // ✅ Save REAL scale at start
         originalCarScale = car.localScale;
 
         UpdateUI();
@@ -79,11 +79,11 @@ public class GameManager : MonoBehaviour
             money -= engineCost;
             engineLevel++;
             moneyPerSecond += engineIncrease;
-            engineCost += 25;
+
+            engineCost = Mathf.RoundToInt(engineCost * engineCostMultiplier);
 
             PlaySound(upgradeSound);
             PlayCarAnimation();
-
             UpdateUI();
         }
     }
@@ -95,7 +95,8 @@ public class GameManager : MonoBehaviour
             money -= clickCost;
             clickLevel++;
             clickValue += clickIncrease;
-            clickCost += 15;
+
+            clickCost = Mathf.RoundToInt(clickCost * clickCostMultiplier);
 
             PlaySound(upgradeSound);
             UpdateUI();
@@ -130,9 +131,7 @@ public class GameManager : MonoBehaviour
             StopCoroutine(carAnimation);
         }
 
-        // ✅ Reset to REAL original scale
         car.localScale = originalCarScale;
-
         carAnimation = StartCoroutine(AnimateCar());
     }
 
@@ -185,7 +184,6 @@ public class GameManager : MonoBehaviour
         float duration = 0.05f;
         float time = 0f;
 
-        // Shrink
         while (time < duration)
         {
             time += Time.deltaTime;
@@ -195,7 +193,6 @@ public class GameManager : MonoBehaviour
 
         time = 0f;
 
-        // Pop
         while (time < duration)
         {
             time += Time.deltaTime;
@@ -205,7 +202,6 @@ public class GameManager : MonoBehaviour
 
         time = 0f;
 
-        // Return
         while (time < duration)
         {
             time += Time.deltaTime;
