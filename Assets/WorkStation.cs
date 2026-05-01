@@ -17,28 +17,41 @@ public class WorkStation : MonoBehaviour
 
     [Header("Visual Feedback")]
     public float pulseScale = 1.08f;
+    public Color highlightColor = Color.yellow;
 
     private Vector3 originalScale;
+    private Renderer stationRenderer;
+    private Color originalColor;
 
     void Start()
     {
         originalScale = transform.localScale;
+
+        stationRenderer = GetComponent<Renderer>();
+
+        if (stationRenderer != null)
+        {
+            originalColor = stationRenderer.material.color;
+        }
     }
 
-    // 🔥 THIS is what your error is missing
     public void SetWorkingVisual(bool isWorking)
     {
-        if (isWorking)
-            transform.localScale = originalScale * pulseScale;
-        else
-            transform.localScale = originalScale;
+        transform.localScale = isWorking ? originalScale * pulseScale : originalScale;
+    }
+
+    public void SetMissionHighlight(bool isHighlighted)
+    {
+        if (stationRenderer == null) return;
+
+        stationRenderer.material.color = isHighlighted ? highlightColor : originalColor;
     }
 
     public void DoWork(GameManager gameManager)
     {
         if (gameManager != null)
         {
-            gameManager.CompleteWork(transform.position, rewardAmount);
+            gameManager.TryCompleteStation(this);
         }
     }
 }

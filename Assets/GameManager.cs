@@ -22,11 +22,13 @@ public class GameManager : MonoBehaviour
     public int clickIncrease = 5;
     public float clickCostMultiplier = 1.35f;
 
-    [Header("Mission System")]
-    public int missionTarget = 3;
-    public int missionProgress = 0;
-    public int missionReward = 100;
+    [Header("Mission Levels")]
+    public int missionLevel = 1;
+    public int missionReward = 150;
     public TextMeshProUGUI missionText;
+
+    private int currentStep = 0;
+    private WorkStation.StationType[] currentMissionOrder;
 
     [Header("UI")]
     public TextMeshProUGUI moneyText;
@@ -47,8 +49,10 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        BuildMissionForLevel();
         UpdateUI();
         UpdateMissionUI();
+        UpdateStationHighlights();
         StartCoroutine(AddMoneyOverTime());
     }
 
@@ -59,6 +63,48 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(1f);
             AddMoney(moneyPerSecond, false, Vector3.zero);
         }
+    }
+
+    void BuildMissionForLevel()
+    {
+        if (missionLevel == 1)
+        {
+            currentMissionOrder = new WorkStation.StationType[]
+            {
+                WorkStation.StationType.Engine,
+                WorkStation.StationType.Paint,
+                WorkStation.StationType.Tuning
+            };
+
+            missionReward = 150;
+        }
+        else if (missionLevel == 2)
+        {
+            currentMissionOrder = new WorkStation.StationType[]
+            {
+                WorkStation.StationType.Engine,
+                WorkStation.StationType.Engine,
+                WorkStation.StationType.Paint,
+                WorkStation.StationType.Tuning
+            };
+
+            missionReward = 300;
+        }
+        else
+        {
+            currentMissionOrder = new WorkStation.StationType[]
+            {
+                WorkStation.StationType.Engine,
+                WorkStation.StationType.Paint,
+                WorkStation.StationType.Paint,
+                WorkStation.StationType.Tuning,
+                WorkStation.StationType.Tuning
+            };
+
+            missionReward = 500 + (missionLevel * 100);
+        }
+
+        currentStep = 0;
     }
 
     public void OnCarClicked(Transform carTransform)
@@ -80,25 +126,59 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
 
-    public void CompleteWork(Vector3 stationPosition, int rewardAmount)
+    public void TryCompleteStation(WorkStation station)
     {
-        AddMoney(rewardAmount, true, stationPosition);
+        if (station == null) return;
 
-        missionProgress++;
+        WorkStation.StationType requiredType = currentMissionOrder[currentStep];
 
-        if (missionProgress >= missionTarget)
+        if (station.stationType == requiredType)
         {
-            AddMoney(missionReward, true, stationPosition);
-            missionProgress = 0;
-        }
+            AddMoney(station.rewardAmount, true, station.transform.position);
 
-        UpdateMissionUI();
+            currentStep++;
+
+            if (currentStep >= currentMissionOrder.Length)
+            {
+                AddMoney(missionReward, true, station.transform.position);
+
+                missionLevel++;
+                BuildMissionForLevel();
+
+                Debug.Log("Mission Complete! New mission level: " + missionLevel);
+            }
+
+            UpdateMissionUI();
+            UpdateStationHighlights();
+        }
+        else
+        {
+            Debug.Log("Wrong station! Need: " + requiredType);
+        }
     }
 
     void UpdateMissionUI()
     {
-        if (missionText != null)
-            missionText.text = "Mission: Fix Starter Car " + missionProgress + "/" + missionTarget;
+        if (missionText == null) return;
+
+        string nextStep = currentMissionOrder[currentStep].ToString();
+
+        missionText.text =
+            "Mission Lv. " + missionLevel + ": Build Starter Car\n" +
+            "Step " + (currentStep + 1) + "/" + currentMissionOrder.Length +
+            ": " + nextStep +
+            "\nReward: $" + missionReward;
+    }
+
+    void UpdateStationHighlights()
+    {
+        WorkStation[] stations = FindObjectsOfType<WorkStation>();
+        WorkStation.StationType requiredType = currentMissionOrder[currentStep];
+
+        foreach (WorkStation station in stations)
+        {
+            station.SetMissionHighlight(station.stationType == requiredType);
+        }
     }
 
     public void BuyEngine()

@@ -1319,6 +1319,7 @@ MonoBehaviour:
   stationName: Engine Station
   rewardAmount: 25
   workDuration: 1.5
+  pulseScale: 1.08
 --- !u!65 &1818978794
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1360,7 +1361,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 1ce2933a2268c4e53ac2eaaef996bb2d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1400,7 +1401,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -3, y: 0.5, z: 2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.2, y: 1, z: 1.2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -2070,6 +2071,7 @@ MonoBehaviour:
   stationName: Paint Station
   rewardAmount: 35
   workDuration: 2
+  pulseScale: 1.08
 --- !u!65 &1938799814
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2111,7 +2113,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 3fcbcf4328b6347a1bfcdf5d9d2ad6a3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2508,6 +2510,7 @@ MonoBehaviour:
   stationName: Tunning Station
   rewardAmount: 50
   workDuration: 2.5
+  pulseScale: 1.08
 --- !u!65 &2082308745
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2549,7 +2552,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: c208e0247b64d4f29843caa4e67f69ca, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2589,7 +2592,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3, y: 0.5, z: 2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.9, y: 1, z: 0.9}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

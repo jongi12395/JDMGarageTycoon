@@ -63,9 +63,7 @@ public class PlayerInteraction : MonoBehaviour
         }
 
         if (previousStation != null && previousStation != currentStation)
-        {
             previousStation.SetWorkingVisual(false);
-        }
     }
 
     void UpdatePrompt()
@@ -73,13 +71,17 @@ public class PlayerInteraction : MonoBehaviour
         if (interactionPrompt == null)
             return;
 
-        bool hasStation = currentStation != null;
-        interactionPrompt.gameObject.SetActive(hasStation);
-
-        if (hasStation)
+        if (currentStation == null)
         {
-            interactionPrompt.text = "Hold E to work on " + currentStation.stationName;
+            interactionPrompt.gameObject.SetActive(false);
+            return;
         }
+
+        interactionPrompt.gameObject.SetActive(true);
+        interactionPrompt.text =
+            currentStation.stationName +
+            "\nReward: $" + currentStation.rewardAmount +
+            "\nHold E to Work";
     }
 
     void WorkOnStation()
@@ -88,7 +90,6 @@ public class PlayerInteraction : MonoBehaviour
             return;
 
         currentStation.SetWorkingVisual(true);
-
         workTimer += Time.deltaTime;
 
         if (workProgressBar != null)
@@ -104,7 +105,6 @@ public class PlayerInteraction : MonoBehaviour
             Debug.Log("Completed: " + currentStation.stationName);
 
             workTimer = 0f;
-
             currentStation.SetWorkingVisual(false);
 
             if (workProgressBar != null)
