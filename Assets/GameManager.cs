@@ -22,16 +22,18 @@ public class GameManager : MonoBehaviour
     public int clickIncrease = 5;
     public float clickCostMultiplier = 1.35f;
 
+    [Header("Mission System")]
+    public int missionTarget = 3;
+    public int missionProgress = 0;
+    public int missionReward = 100;
+    public TextMeshProUGUI missionText;
+
     [Header("UI")]
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI engineText;
     public TextMeshProUGUI clickText;
     public Button engineButton;
     public Button clickButton;
-
-    [Header("Car")]
-    public Transform car;
-    private Vector3 originalCarScale;
 
     [Header("Floating Text")]
     public GameObject floatingTextPrefab;
@@ -45,9 +47,8 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        originalCarScale = car.localScale;
-
         UpdateUI();
+        UpdateMissionUI();
         StartCoroutine(AddMoneyOverTime());
     }
 
@@ -56,20 +57,48 @@ public class GameManager : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(1f);
-            money += moneyPerSecond;
-            UpdateUI();
+            AddMoney(moneyPerSecond, false, Vector3.zero);
         }
     }
 
-    public void OnCarClicked()
+    public void OnCarClicked(Transform carTransform)
     {
-        money += clickValue;
+        AddMoney(clickValue, true, carTransform.position);
+        PlayCarAnimation(carTransform);
+    }
 
-        PlaySound(clickSound);
-        SpawnFloatingText();
-        PlayCarAnimation();
+    public void AddMoney(int amount, bool showFeedback, Vector3 worldPosition)
+    {
+        money += amount;
+
+        if (showFeedback)
+        {
+            PlaySound(clickSound);
+            SpawnFloatingText(amount, worldPosition);
+        }
 
         UpdateUI();
+    }
+
+    public void CompleteWork(Vector3 stationPosition, int rewardAmount)
+    {
+        AddMoney(rewardAmount, true, stationPosition);
+
+        missionProgress++;
+
+        if (missionProgress >= missionTarget)
+        {
+            AddMoney(missionReward, true, stationPosition);
+            missionProgress = 0;
+        }
+
+        UpdateMissionUI();
+    }
+
+    void UpdateMissionUI()
+    {
+        if (missionText != null)
+            missionText.text = "Mission: Fix Starter Car " + missionProgress + "/" + missionTarget;
     }
 
     public void BuyEngine()
@@ -79,11 +108,9 @@ public class GameManager : MonoBehaviour
             money -= engineCost;
             engineLevel++;
             moneyPerSecond += engineIncrease;
-
             engineCost = Mathf.RoundToInt(engineCost * engineCostMultiplier);
 
             PlaySound(upgradeSound);
-            PlayCarAnimation();
             UpdateUI();
         }
     }
@@ -95,7 +122,6 @@ public class GameManager : MonoBehaviour
             money -= clickCost;
             clickLevel++;
             clickValue += clickIncrease;
-
             clickCost = Mathf.RoundToInt(clickCost * clickCostMultiplier);
 
             PlaySound(upgradeSound);
@@ -105,46 +131,87 @@ public class GameManager : MonoBehaviour
 
     void UpdateUI()
     {
-        moneyText.text = "Money: $" + money + "\nIncome: $" + moneyPerSecond + "/sec";
+        if (moneyText != null)
+            moneyText.text = "Money: $" + money + "\nIncome: $" + moneyPerSecond + "/sec";
 
-        engineText.text = "Engine Lv. " + engineLevel + "\nCost: $" + engineCost;
-        clickText.text = "Click Lv. " + clickLevel + "\nCost: $" + clickCost;
+        if (engineText != null)
+            engineText.text = "Engine Lv. " + engineLevel + "\nCost: $" + engineCost;
 
-        engineButton.interactable = money >= engineCost;
-        clickButton.interactable = money >= clickCost;
+        if (clickText != null)
+            clickText.text = "Click Lv. " + clickLevel + "\nCost: $" + clickCost;
+
+        if (engineButton != null)
+            engineButton.interactable = money >= engineCost;
+
+        if (clickButton != null)
+            clickButton.interactable = money >= clickCost;
     }
 
     void PlaySound(AudioClip clip)
     {
         if (audioSource != null && clip != null)
-        {
             audioSource.PlayOneShot(clip);
-        }
     }
 
-    void PlayCarAnimation()
+    void PlayCarAnimation(Transform carTransform)
     {
-        if (car == null) return;
+        if (carTransform == null) return;
 
         if (carAnimation != null)
-        {
             StopCoroutine(carAnimation);
-        }
 
-        car.localScale = originalCarScale;
-        carAnimation = StartCoroutine(AnimateCar());
+        carAnimation = StartCoroutine(AnimateCar(carTransform));
     }
 
-    void SpawnFloatingText()
+    IEnumerator AnimateCar(Transform carTransform)
     {
+        Vector3 originalScale = carTransform.localScale;
+        Vector3 smallerScale = originalScale * 0.9f;
+        Vector3 popScale = originalScale * 1.15f;
+
+        float duration = 0.05f;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            carTransform.localScale = Vector3.Lerp(originalScale, smallerScale, time / duration);
+            yield return null;
+        }
+
+        time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            carTransform.localScale = Vector3.Lerp(smallerScale, popScale, time / duration);
+            yield return null;
+        }
+
+        time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            carTransform.localScale = Vector3.Lerp(popScale, originalScale, time / duration);
+            yield return null;
+        }
+
+        carTransform.localScale = originalScale;
+    }
+
+    public void SpawnFloatingText(int amount, Vector3 worldPosition)
+    {
+        if (floatingTextPrefab == null || moneyText == null) return;
+
         GameObject text = Instantiate(floatingTextPrefab, moneyText.transform.parent);
         text.SetActive(true);
 
         TextMeshProUGUI tmp = text.GetComponent<TextMeshProUGUI>();
-        tmp.text = "+$" + clickValue;
+        tmp.text = "+$" + amount;
 
         RectTransform rt = text.GetComponent<RectTransform>();
-        Vector3 screenPos = Camera.main.WorldToScreenPoint(car.position);
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition + Vector3.up * 1.5f);
         rt.position = screenPos;
 
         StartCoroutine(AnimateFloatingText(text));
@@ -164,7 +231,6 @@ public class GameManager : MonoBehaviour
         while (time < duration)
         {
             time += Time.deltaTime;
-
             rt.anchoredPosition = startPos + Vector3.up * (time * 80f);
 
             float alpha = Mathf.Lerp(1f, 0f, time / duration);
@@ -174,41 +240,5 @@ public class GameManager : MonoBehaviour
         }
 
         Destroy(text);
-    }
-
-    IEnumerator AnimateCar()
-    {
-        Vector3 smallerScale = originalCarScale * 0.9f;
-        Vector3 popScale = originalCarScale * 1.15f;
-
-        float duration = 0.05f;
-        float time = 0f;
-
-        while (time < duration)
-        {
-            time += Time.deltaTime;
-            car.localScale = Vector3.Lerp(originalCarScale, smallerScale, time / duration);
-            yield return null;
-        }
-
-        time = 0f;
-
-        while (time < duration)
-        {
-            time += Time.deltaTime;
-            car.localScale = Vector3.Lerp(smallerScale, popScale, time / duration);
-            yield return null;
-        }
-
-        time = 0f;
-
-        while (time < duration)
-        {
-            time += Time.deltaTime;
-            car.localScale = Vector3.Lerp(popScale, originalCarScale, time / duration);
-            yield return null;
-        }
-
-        car.localScale = originalCarScale;
     }
 }

@@ -6,6 +6,9 @@ public class CarClick : MonoBehaviour
 
     void OnMouseDown()
     {
-        gameManager.OnCarClicked();
+        if (gameManager != null)
+        {
+            gameManager.OnCarClicked(transform);
+        }
     }
 }
